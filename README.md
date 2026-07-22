@@ -49,10 +49,14 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
 
 > **Já tinha configurado a planilha antes desta atualização?** O
 > `configurarPlanilha` só cria abas que não existem, então ele não vai
-> reescrever o cabeçalho sozinho. Faça manualmente: clique com o botão
-> direito na letra da coluna **B** da aba `Pedidos` → **Inserir 1 coluna à
-> esquerda** → escreva `Tipo` na célula B1. Isso empurra as colunas
-> seguintes uma posição pra direita, que é exatamente a estrutura nova.
+> reescrever o cabeçalho sozinho. Confira se a aba `Pedidos` tem estas 12
+> colunas, na ordem: `Nome, Tipo, Tamanho, Numero, NomeCamisa, SinalPago,
+> ComprovanteSinalLink, RestantePago, ComprovanteRestanteLink,
+> DataHoraPedido, ValorRestantePago, DataHoraRestante`. Se faltar alguma,
+> insira colunas manualmente (botão direito na letra da coluna → Inserir
+> coluna) até bater com essa ordem — a última coluna que a maioria de
+> vocês vai precisar adicionar é `ValorRestantePago` e `DataHoraRestante`
+> no final.
 
 ## Passo 2 — Publicar o Web App
 
@@ -109,9 +113,14 @@ mais direto pra quem já mexe com Git.
 A aba `Pedidos` já é a sua planilha de gestão, com colunas separadas pro
 sinal e pro restante:
 
-`Nome | Tipo | Tamanho | Numero | NomeCamisa | SinalPago | ComprovanteSinalLink | RestantePago | ComprovanteRestanteLink | DataHora`
+`Nome | Tipo | Tamanho | Numero | NomeCamisa | SinalPago | ComprovanteSinalLink | RestantePago | ComprovanteRestanteLink | DataHoraPedido | ValorRestantePago | DataHoraRestante`
 
-A coluna `Tipo` guarda "Linha" ou "Goleiro", conforme a pessoa escolhe no site.
+A coluna `Tipo` guarda "Linha" ou "Goleiro", conforme a pessoa escolhe no
+site. As colunas `ValorRestantePago` e `DataHoraRestante` registram o valor
+exato e o momento em que cada pessoa confirmou o restante — isso importa
+porque, se você corrigir o valor na aba `Config` depois que algumas pessoas
+já pagaram, cada linha continua com o valor que estava valendo na hora,
+sem misturar histórico.
 
 Quando o valor final da camisa for fechado, vá na aba `Config` e preencha a
 célula **B1** com o valor (ex: `40`). A partir daí, a seção 03 do site passa
@@ -126,7 +135,10 @@ nativas do Sheets (não precisa de código):
 - **Quantos goleiros**: `=COUNTIF(Pedidos!B:B; "Goleiro")`.
 - **Total do sinal arrecadado**: `=COUNTIF(Pedidos!F:F; "SIM") * 20` (troque
   20 pelo valor do sinal).
-- **Total do restante arrecadado**: `=COUNTIF(Pedidos!H:H; "SIM") * Config!B1`.
+- **Total do restante arrecadado**: `=SUMIF(Pedidos!H:H; "SIM"; Pedidos!K:K)`
+  (soma o valor que cada um efetivamente pagou, coluna `ValorRestantePago` —
+  mais preciso do que multiplicar pelo valor atual da `Config`, caso o
+  valor tenha mudado no meio do caminho).
 - **Quem falta pagar o sinal**: filtro na coluna `SinalPago` = `NAO`.
 - **Quem falta pagar o restante**: filtro na coluna `RestantePago` = `NAO`
   (só faz sentido depois que `Config!B1` estiver preenchido).

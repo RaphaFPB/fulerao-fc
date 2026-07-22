@@ -10,6 +10,9 @@ const NOME_PASTA_COMPROVANTES = "Fulerao FC - Comprovantes Pix";
 // Troque por um código combinado com o grupo. É a única checagem de acesso.
 const SENHA_GRUPO = "fulerao2026";
 
+const TIPOS_CAMISA_VALIDOS = ["Linha", "Goleiro"];
+const TAMANHOS_VALIDOS = ["P", "M", "G", "GG", "XG"];
+
 const CABECALHO_PEDIDOS = [
   "Nome",
   "Tipo",
@@ -20,7 +23,9 @@ const CABECALHO_PEDIDOS = [
   "ComprovanteSinalLink",
   "RestantePago",
   "ComprovanteRestanteLink",
-  "DataHora",
+  "DataHoraPedido",
+  "ValorRestantePago",
+  "DataHoraRestante",
 ];
 
 /* ---------- ponto de entrada: configura as abas na primeira vez ---------- */
@@ -72,6 +77,7 @@ function doGet(e) {
       nomeCamisa: linha[4],
       sinalPago: linha[5],
       restantePago: linha[7],
+      valorRestantePago: linha[10],
       valorRestante: buscarValorRestante(),
     });
   }
@@ -104,14 +110,28 @@ function processarPedidoInicial(corpo) {
     return responderJson({ success: false, message: "Preencha todos os campos." });
   }
 
-  let linkComprovante = "";
-  if (corpo.comprovanteBase64) {
-    linkComprovante = salvarComprovante(
-      corpo.comprovanteBase64,
-      corpo.comprovanteNome || "comprovante-sinal.jpg",
-      corpo.nome
-    );
+  if (TIPOS_CAMISA_VALIDOS.indexOf(corpo.tipoCamisa) === -1) {
+    return responderJson({ success: false, message: "Tipo de camisa inválido." });
   }
+
+  if (TAMANHOS_VALIDOS.indexOf(corpo.tamanho) === -1) {
+    return responderJson({ success: false, message: "Tamanho inválido." });
+  }
+
+  const numero = Number(corpo.numero);
+  if (isNaN(numero) || numero < 0 || numero > 99) {
+    return responderJson({ success: false, message: "Número da camisa inválido (use 0 a 99)." });
+  }
+
+  if (!corpo.comprovanteBase64) {
+    return responderJson({ success: false, message: "Anexe o comprovante do sinal." });
+  }
+
+  const linkComprovante = salvarComprovante(
+    corpo.comprovanteBase64,
+    corpo.comprovanteNome || "comprovante-sinal.jpg",
+    corpo.nome
+  );
 
   const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_PEDIDOS);
   const dados = aba.getDataRange().getValues();
@@ -124,17 +144,21 @@ function processarPedidoInicial(corpo) {
     corpo.nomeCamisa,
     corpo.pago || "NAO", // SinalPago
     linkComprovante || "",
-    "NAO", // RestantePago começa sempre em NAO num pedido novo/editado
-    "",
-    new Date(),
+    "NAO", // RestantePago começa sempre em NAO num pedido novo
+    "", // ComprovanteRestanteLink
+    new Date(), // DataHoraPedido
+    "", // ValorRestantePago
+    "", // DataHoraRestante
   ];
 
   for (let i = 1; i < dados.length; i++) {
     if (normalizarNome(dados[i][0]) === normalizarNome(corpo.nome)) {
       novaLinha[0] = dados[i][0]; // mantém grafia original do nome
-      if (!linkComprovante && dados[i][6]) novaLinha[6] = dados[i][6];
-      novaLinha[7] = dados[i][7]; // preserva status do restante, se já existir
-      novaLinha[8] = dados[i][8];
+      // preserva tudo que já é do restante, edição do pedido não mexe nisso
+      novaLinha[7] = dados[i][7]; // RestantePago
+      novaLinha[8] = dados[i][8]; // ComprovanteRestanteLink
+      novaLinha[10] = dados[i][10]; // ValorRestantePago
+      novaLinha[11] = dados[i][11]; // DataHoraRestante
       aba.getRange(i + 1, 1, 1, CABECALHO_PEDIDOS.length).setValues([novaLinha]);
       return responderJson({ success: true });
     }
@@ -179,6 +203,8 @@ function processarPagamentoRestante(corpo) {
 
       aba.getRange(i + 1, 8).setValue("SIM"); // RestantePago
       aba.getRange(i + 1, 9).setValue(link); // ComprovanteRestanteLink
+      aba.getRange(i + 1, 11).setValue(valorRestante); // ValorRestantePago (valor exato no momento do pagamento)
+      aba.getRange(i + 1, 12).setValue(new Date()); // DataHoraRestante
       return responderJson({ success: true });
     }
   }

@@ -252,6 +252,22 @@ select:focus, input:focus {
   outline-offset: 1px;
 }
 
+.erro-campo {
+  display: none;
+  font-family: var(--fonte-corpo);
+  font-size: 0.82rem;
+  color: #B3261E;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.erro-campo.visivel { display: block; margin-top: 0.15rem; }
+
+.campo-invalido {
+  border-color: #B3261E !important;
+  background: #FBEAEA;
+}
+
 .crachá-preview {
   display: flex;
   align-items: center;

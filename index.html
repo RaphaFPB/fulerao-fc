@@ -75,11 +75,13 @@
       <div class="sumula-linha">
         <label for="nome">Seu nome</label>
         <input type="text" id="nome" name="nome" placeholder="Nome ou apelido que o grupo reconhece" required>
+        <span class="erro-campo" id="erro-nome"></span>
       </div>
 
       <div class="sumula-linha">
         <label for="senhaGrupo">Código do grupo</label>
         <input type="text" id="senhaGrupo" name="senhaGrupo" placeholder="Pergunta pro admin do grupo" required>
+        <span class="erro-campo" id="erro-senhaGrupo"></span>
       </div>
 
       <div class="sumula-linha sumula-linha-dupla">
@@ -90,6 +92,7 @@
             <option value="Linha">Linha</option>
             <option value="Goleiro">Goleiro</option>
           </select>
+          <span class="erro-campo" id="erro-tipoCamisa"></span>
         </div>
         <div>
           <label for="tamanho">Tamanho</label>
@@ -101,17 +104,20 @@
             <option value="GG">GG</option>
             <option value="XG">XG</option>
           </select>
+          <span class="erro-campo" id="erro-tamanho"></span>
         </div>
       </div>
 
       <div class="sumula-linha">
         <label for="numero">Número na camisa</label>
         <input type="number" id="numero" name="numero" min="0" max="99" placeholder="00" required>
+        <span class="erro-campo" id="erro-numero"></span>
       </div>
 
       <div class="sumula-linha">
         <label for="nomeCamisa">Nome que vai nas costas</label>
         <input type="text" id="nomeCamisa" name="nomeCamisa" maxlength="14" placeholder="Ex: FULERO" required>
+        <span class="erro-campo" id="erro-nomeCamisa"></span>
       </div>
 
       <div class="crachá-preview" aria-hidden="true">
@@ -134,11 +140,13 @@
 
         <label for="comprovante" class="label-upload">Comprovante do sinal (print ou foto)</label>
         <input type="file" id="comprovante" name="comprovante" accept="image/*" required>
+        <span class="erro-campo" id="erro-comprovante"></span>
 
         <label class="checkbox-linha">
           <input type="checkbox" id="jaPaguei" name="jaPaguei" required>
           Já fiz o Pix do sinal e anexei o comprovante acima
         </label>
+        <span class="erro-campo" id="erro-jaPaguei"></span>
       </div>
 
       <button type="submit" class="btn-enviar" id="btn-enviar">Confirmar escalação</button>
@@ -160,10 +168,12 @@
         <div>
           <label for="nomeRestante">Seu nome</label>
           <input type="text" id="nomeRestante" name="nomeRestante" placeholder="O mesmo nome do pedido inicial" required>
+          <span class="erro-campo" id="erro-nomeRestante"></span>
         </div>
         <div>
           <label for="senhaGrupoRestante">Código do grupo</label>
           <input type="text" id="senhaGrupoRestante" name="senhaGrupoRestante" placeholder="Pergunta pro admin do grupo" required>
+          <span class="erro-campo" id="erro-senhaGrupoRestante"></span>
         </div>
       </div>
 
@@ -172,11 +182,13 @@
 
         <label for="comprovanteRestante" class="label-upload">Comprovante do restante (print ou foto)</label>
         <input type="file" id="comprovanteRestante" name="comprovanteRestante" accept="image/*" required>
+        <span class="erro-campo" id="erro-comprovanteRestante"></span>
 
         <label class="checkbox-linha">
           <input type="checkbox" id="jaPagueiRestante" name="jaPagueiRestante" required>
           Já fiz o Pix do restante e anexei o comprovante acima
         </label>
+        <span class="erro-campo" id="erro-jaPagueiRestante"></span>
       </div>
 
       <button type="submit" class="btn-enviar" id="btn-enviar-restante">Confirmar pagamento final</button>
