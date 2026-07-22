@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fulerão FC — Súmula de Pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="pitch-bg">
+  <svg class="pitch-lines" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+    <circle cx="600" cy="400" r="140" fill="none" stroke="currentColor" stroke-width="2"/>
+    <line x1="600" y1="0" x2="600" y2="800" stroke="currentColor" stroke-width="2"/>
+    <rect x="20" y="220" width="180" height="360" fill="none" stroke="currentColor" stroke-width="2"/>
+    <rect x="1000" y="220" width="180" height="360" fill="none" stroke="currentColor" stroke-width="2"/>
+  </svg>
+
+  <header class="hero">
+    <p class="eyebrow">Súmula de pedido — temporada 2026</p>
+    <h1 class="hero-title">FULERÃO FC</h1>
+    <p class="hero-alcunha">(alcunha oficial: <em>Só Fuleragem</em>)</p>
+    <p class="hero-sub">Escala teu nome, escolhe o tamanho, cola teu número e garante teu manto pra próxima pelada.</p>
+    <a href="#formulario" class="btn-cta">Fazer meu pedido ↓</a>
+  </header>
+</div>
+
+<main>
+
+  <section class="secao ficha-tecnica" id="camisa">
+    <div class="secao-cabecalho">
+      <span class="tag-numero">01</span>
+      <h2>Ficha técnica do manto</h2>
+    </div>
+
+    <div class="ficha-grid">
+      <figure class="camisa-card">
+        <img src="assets/camisa.png" alt="Esboço da camisa Fulerão FC" onerror="this.src='assets/camisa-placeholder.svg'">
+        <figcaption>Esboço oficial — sujeito a ajustes finos antes da produção.</figcaption>
+      </figure>
+
+      <div class="tabela-medidas-wrap">
+        <h3>Tabela de medidas <span class="badge-exemplo">exemplo — atualizar</span></h3>
+        <table class="tabela-medidas">
+          <thead>
+            <tr>
+              <th>Tamanho</th>
+              <th>Largura (cm)</th>
+              <th>Comprimento (cm)</th>
+              <th>Ombro (cm)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>P</td><td>48</td><td>68</td><td>42</td></tr>
+            <tr><td>M</td><td>51</td><td>70</td><td>44</td></tr>
+            <tr><td>G</td><td>54</td><td>72</td><td>46</td></tr>
+            <tr><td>GG</td><td>57</td><td>74</td><td>48</td></tr>
+            <tr><td>XG</td><td>60</td><td>76</td><td>50</td></tr>
+          </tbody>
+        </table>
+        <p class="medidas-nota">Medida feita com a peça deitada, de ponta a ponta. Em caso de dúvida, meça uma camisa que já veste bem e compara.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="formulario">
+    <div class="secao-cabecalho">
+      <span class="tag-numero">02</span>
+      <h2>Escalação — faz teu pedido</h2>
+    </div>
+
+    <form id="form-pedido" class="sumula-card">
+      <div class="sumula-linha">
+        <label for="nome">Seu nome</label>
+        <input type="text" id="nome" name="nome" placeholder="Nome ou apelido que o grupo reconhece" required>
+      </div>
+
+      <div class="sumula-linha">
+        <label for="senhaGrupo">Código do grupo</label>
+        <input type="text" id="senhaGrupo" name="senhaGrupo" placeholder="Pergunta pro admin do grupo" required>
+      </div>
+
+      <div class="sumula-linha sumula-linha-dupla">
+        <div>
+          <label for="tipoCamisa">Tipo de camisa</label>
+          <select id="tipoCamisa" name="tipoCamisa" required>
+            <option value="" disabled selected>Escolhe</option>
+            <option value="Linha">Linha</option>
+            <option value="Goleiro">Goleiro</option>
+          </select>
+        </div>
+        <div>
+          <label for="tamanho">Tamanho</label>
+          <select id="tamanho" name="tamanho" required>
+            <option value="" disabled selected>Escolhe</option>
+            <option value="P">P</option>
+            <option value="M">M</option>
+            <option value="G">G</option>
+            <option value="GG">GG</option>
+            <option value="XG">XG</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sumula-linha">
+        <label for="numero">Número na camisa</label>
+        <input type="number" id="numero" name="numero" min="0" max="99" placeholder="00" required>
+      </div>
+
+      <div class="sumula-linha">
+        <label for="nomeCamisa">Nome que vai nas costas</label>
+        <input type="text" id="nomeCamisa" name="nomeCamisa" maxlength="14" placeholder="Ex: FULERO" required>
+      </div>
+
+      <div class="crachá-preview" aria-hidden="true">
+        <span class="crachá-numero" id="preview-numero">00</span>
+        <span class="crachá-nome" id="preview-nome">SEU NOME</span>
+        <span class="crachá-tipo" id="preview-tipo"></span>
+      </div>
+
+      <hr class="linha-divisoria">
+
+      <div class="pix-box">
+        <h3>Sinal — Pix</h3>
+        <p>Valor do sinal: <strong id="valor-sinal">R$ --,--</strong></p>
+        <p>Chave Pix (<span id="tipo-chave">tipo</span>): <strong id="chave-pix">defina em config no script.js</strong></p>
+        <div class="qr-slot">
+          <img id="qr-pix" src="assets/qr-pix.png" alt="QR Code Pix" onerror="this.style.display='none'; document.getElementById('qr-fallback').style.display='block';">
+          <p id="qr-fallback" style="display:none;">Cole o QR Code em <code>assets/qr-pix.png</code> ou use a chave copia-e-cola acima.</p>
+        </div>
+        <p class="aviso-restante">O valor final da camisa ainda não está fechado — o restante é cobrado depois, quando a produção confirmar o preço. Isso é só o sinal pra garantir seu pedido.</p>
+
+        <label for="comprovante" class="label-upload">Comprovante do sinal (print ou foto)</label>
+        <input type="file" id="comprovante" name="comprovante" accept="image/*" required>
+
+        <label class="checkbox-linha">
+          <input type="checkbox" id="jaPaguei" name="jaPaguei" required>
+          Já fiz o Pix do sinal e anexei o comprovante acima
+        </label>
+      </div>
+
+      <button type="submit" class="btn-enviar" id="btn-enviar">Confirmar escalação</button>
+
+      <p class="mensagem-status" id="mensagem-status" role="status"></p>
+    </form>
+  </section>
+
+  <section class="secao" id="pagamento-final">
+    <div class="secao-cabecalho">
+      <span class="tag-numero">03</span>
+      <h2>Pagamento final — quando a camisa estiver pronta</h2>
+    </div>
+
+    <form id="form-restante" class="sumula-card">
+      <p class="status-restante" id="status-valor-restante">Consultando o valor final...</p>
+
+      <div class="sumula-linha sumula-linha-dupla">
+        <div>
+          <label for="nomeRestante">Seu nome</label>
+          <input type="text" id="nomeRestante" name="nomeRestante" placeholder="O mesmo nome do pedido inicial" required>
+        </div>
+        <div>
+          <label for="senhaGrupoRestante">Código do grupo</label>
+          <input type="text" id="senhaGrupoRestante" name="senhaGrupoRestante" placeholder="Pergunta pro admin do grupo" required>
+        </div>
+      </div>
+
+      <div class="pix-box">
+        <p>Chave Pix (<span id="tipo-chave-2">tipo</span>): <strong id="chave-pix-2">defina em config no script.js</strong></p>
+
+        <label for="comprovanteRestante" class="label-upload">Comprovante do restante (print ou foto)</label>
+        <input type="file" id="comprovanteRestante" name="comprovanteRestante" accept="image/*" required>
+
+        <label class="checkbox-linha">
+          <input type="checkbox" id="jaPagueiRestante" name="jaPagueiRestante" required>
+          Já fiz o Pix do restante e anexei o comprovante acima
+        </label>
+      </div>
+
+      <button type="submit" class="btn-enviar" id="btn-enviar-restante">Confirmar pagamento final</button>
+
+      <p class="mensagem-status" id="mensagem-status-restante" role="status"></p>
+    </form>
+  </section>
+
+</main>
+
+<footer class="rodape">
+  <p>Fulerão FC — feito no braço pra não perder o prazo da encomenda.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

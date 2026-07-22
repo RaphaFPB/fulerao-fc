@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#F3F0E6"/>
+  <path d="M120 40 L160 20 L200 55 L240 20 L280 40 L320 90 L285 120 L270 100 L270 380 L130 380 L130 100 L115 120 L80 90 Z"
+        fill="none" stroke="#12321F" stroke-width="4"/>
+  <text x="200" y="210" font-family="monospace" font-size="18" fill="#2F6D4A" text-anchor="middle">
+    coloque camisa.png
+  </text>
+  <text x="200" y="234" font-family="monospace" font-size="18" fill="#2F6D4A" text-anchor="middle">
+    nesta pasta assets/
+  </text>
+</svg>
