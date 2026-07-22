@@ -5,10 +5,16 @@
 
 const ABA_PEDIDOS = "Pedidos";
 const ABA_CONFIG = "Config";
+const ABA_RESERVAS = "Reservas";
 const NOME_PASTA_COMPROVANTES = "Fulerao FC - Comprovantes Pix";
 
-// Troque por um código combinado com o grupo. É a única checagem de acesso.
+// Código pra qualquer pedido. Combine com o grupo inteiro.
 const SENHA_GRUPO = "fulerao2026";
+
+// Segunda senha, só pra liberar um número que está reservado pra outra
+// pessoa. Não repasse pro grupo todo — só entregue pontualmente quando o
+// dono da reserva abrir mão do número dele.
+const SENHA_LIBERACAO_RESERVA = "libera-numero-2026";
 
 const TIPOS_CAMISA_VALIDOS = ["Linha", "Goleiro"];
 const TAMANHOS_VALIDOS = ["P", "M", "G", "GG", "XG"];
@@ -27,6 +33,8 @@ const CABECALHO_PEDIDOS = [
   "ValorRestantePago",
   "DataHoraRestante",
 ];
+
+const CABECALHO_RESERVAS = ["Numero", "Nome", "ValidoAte"];
 
 /* ---------- ponto de entrada: configura as abas na primeira vez ---------- */
 
@@ -48,13 +56,23 @@ function configurarPlanilha() {
     abaConfig.getRange("A1:A1").setFontWeight("bold");
   }
 
+  let abaReservas = planilha.getSheetByName(ABA_RESERVAS);
+  if (!abaReservas) {
+    abaReservas = planilha.insertSheet(ABA_RESERVAS);
+    abaReservas.getRange(1, 1, 1, CABECALHO_RESERVAS.length).setValues([CABECALHO_RESERVAS]);
+    abaReservas.setFrozenRows(1);
+    abaReservas.getRange(2, 1, 1, 3).setValues([[10, "Exemplo Jogador", "2026-08-15"]]);
+  }
+
   Logger.log(
-    "Planilha configurada. Defina SENHA_GRUPO no Code.gs e, quando souber " +
-    "o valor final da camisa, preencha a célula B1 da aba 'Config'."
+    "Planilha configurada. Defina SENHA_GRUPO e SENHA_LIBERACAO_RESERVA no " +
+    "Code.gs, preencha a aba 'Reservas' com quem tem prioridade em cada " +
+    "número, e quando souber o valor final da camisa, preencha a célula " +
+    "B1 da aba 'Config'."
   );
 }
 
-/* ---------- GET: status de um pedido / valor restante atual ---------- */
+/* ---------- GET: consultas de status ---------- */
 
 function doGet(e) {
   const acao = e.parameter.action;
@@ -63,11 +81,21 @@ function doGet(e) {
     return responderJson({ valor: buscarValorRestante() });
   }
 
+  if (acao === "numeros") {
+    return responderJson({ numeros: buscarStatusTodosNumeros() });
+  }
+
+  if (acao === "numeroInfo") {
+    const numero = Number(e.parameter.numero);
+    return responderJson(buscarStatusNumero(numero));
+  }
+
   if (acao === "pedido") {
     const nome = e.parameter.nome || "";
     const linha = buscarLinhaPedido(nome);
+    const reserva = buscarReservaPorNome(nome);
 
-    if (!linha) return responderJson({ encontrado: false });
+    if (!linha) return responderJson({ encontrado: false, reserva: reserva });
 
     return responderJson({
       encontrado: true,
@@ -79,6 +107,7 @@ function doGet(e) {
       restantePago: linha[7],
       valorRestantePago: linha[10],
       valorRestante: buscarValorRestante(),
+      reserva: reserva,
     });
   }
 
@@ -123,6 +152,27 @@ function processarPedidoInicial(corpo) {
     return responderJson({ success: false, message: "Número da camisa inválido (use 0 a 99)." });
   }
 
+  const statusNumero = verificarNumeroDisponivel(numero, corpo.nome);
+  if (!statusNumero.livre) {
+    if (statusNumero.motivo === "ocupado") {
+      return responderJson({
+        success: false,
+        message: `O número ${numero} já está ocupado por outra pessoa. Escolhe outro.`,
+      });
+    }
+    if (statusNumero.motivo === "reservado") {
+      if (corpo.senhaLiberacao !== SENHA_LIBERACAO_RESERVA) {
+        return responderJson({
+          success: false,
+          message:
+            `O número ${numero} está reservado para ${statusNumero.nome} até ` +
+            `${statusNumero.validoAte}. Pra pegar mesmo assim, informe a senha de ` +
+            `liberação (peça pro admin, só se essa pessoa abriu mão do número).`,
+        });
+      }
+    }
+  }
+
   if (!corpo.comprovanteBase64) {
     return responderJson({ success: false, message: "Anexe o comprovante do sinal." });
   }
@@ -140,7 +190,7 @@ function processarPedidoInicial(corpo) {
     corpo.nome,
     corpo.tipoCamisa,
     corpo.tamanho,
-    corpo.numero,
+    numero,
     corpo.nomeCamisa,
     corpo.pago || "NAO", // SinalPago
     linkComprovante || "",
@@ -154,11 +204,10 @@ function processarPedidoInicial(corpo) {
   for (let i = 1; i < dados.length; i++) {
     if (normalizarNome(dados[i][0]) === normalizarNome(corpo.nome)) {
       novaLinha[0] = dados[i][0]; // mantém grafia original do nome
-      // preserva tudo que já é do restante, edição do pedido não mexe nisso
-      novaLinha[7] = dados[i][7]; // RestantePago
-      novaLinha[8] = dados[i][8]; // ComprovanteRestanteLink
-      novaLinha[10] = dados[i][10]; // ValorRestantePago
-      novaLinha[11] = dados[i][11]; // DataHoraRestante
+      novaLinha[7] = dados[i][7]; // preserva RestantePago
+      novaLinha[8] = dados[i][8]; // preserva ComprovanteRestanteLink
+      novaLinha[10] = dados[i][10]; // preserva ValorRestantePago
+      novaLinha[11] = dados[i][11]; // preserva DataHoraRestante
       aba.getRange(i + 1, 1, 1, CABECALHO_PEDIDOS.length).setValues([novaLinha]);
       return responderJson({ success: true });
     }
@@ -203,7 +252,7 @@ function processarPagamentoRestante(corpo) {
 
       aba.getRange(i + 1, 8).setValue("SIM"); // RestantePago
       aba.getRange(i + 1, 9).setValue(link); // ComprovanteRestanteLink
-      aba.getRange(i + 1, 11).setValue(valorRestante); // ValorRestantePago (valor exato no momento do pagamento)
+      aba.getRange(i + 1, 11).setValue(valorRestante); // ValorRestantePago
       aba.getRange(i + 1, 12).setValue(new Date()); // DataHoraRestante
       return responderJson({ success: true });
     }
@@ -213,6 +262,130 @@ function processarPagamentoRestante(corpo) {
     success: false,
     message: "Não encontrei um pedido com esse nome. Faça o pedido inicial primeiro.",
   });
+}
+
+/* ---------- números: disponibilidade e reservas ---------- */
+
+function buscarStatusTodosNumeros() {
+  const ocupados = buscarNumerosOcupados();
+  const reservas = buscarReservasValidas();
+
+  const resultado = [];
+  for (let n = 0; n <= 99; n++) {
+    if (ocupados[n]) {
+      resultado.push({ numero: n, status: "ocupado", nome: ocupados[n] });
+    } else if (reservas[n]) {
+      resultado.push({
+        numero: n,
+        status: "reservado",
+        nome: reservas[n].nome,
+        validoAte: reservas[n].validoAte,
+      });
+    } else {
+      resultado.push({ numero: n, status: "livre" });
+    }
+  }
+  return resultado;
+}
+
+function buscarStatusNumero(numero) {
+  const ocupados = buscarNumerosOcupados();
+  if (ocupados[numero]) {
+    return { numero: numero, status: "ocupado", nome: ocupados[numero] };
+  }
+
+  const reservas = buscarReservasValidas();
+  if (reservas[numero]) {
+    return {
+      numero: numero,
+      status: "reservado",
+      nome: reservas[numero].nome,
+      validoAte: reservas[numero].validoAte,
+    };
+  }
+
+  return { numero: numero, status: "livre" };
+}
+
+function buscarNumerosOcupados() {
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_PEDIDOS);
+  const dados = aba.getDataRange().getValues();
+  const ocupados = {};
+
+  for (let i = 1; i < dados.length; i++) {
+    const numero = dados[i][3];
+    if (numero !== "" && numero !== null && numero !== undefined) {
+      ocupados[Number(numero)] = dados[i][0];
+    }
+  }
+  return ocupados;
+}
+
+function buscarReservasValidas() {
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_RESERVAS);
+  const dados = aba.getDataRange().getValues();
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const reservas = {};
+  for (let i = 1; i < dados.length; i++) {
+    const numero = dados[i][0];
+    const nome = dados[i][1];
+    const validoAte = dados[i][2];
+    if (numero === "" || numero === null || !nome || !validoAte) continue;
+
+    const dataValidade = new Date(validoAte);
+    if (dataValidade >= hoje) {
+      reservas[Number(numero)] = { nome: nome, validoAte: formatarData(dataValidade) };
+    }
+  }
+  return reservas;
+}
+
+function buscarReservaPorNome(nome) {
+  if (!nome) return null;
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(ABA_RESERVAS);
+  const dados = aba.getDataRange().getValues();
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  for (let i = 1; i < dados.length; i++) {
+    const numero = dados[i][0];
+    const nomeReserva = dados[i][1];
+    const validoAte = dados[i][2];
+    if (numero === "" || numero === null || !nomeReserva || !validoAte) continue;
+
+    if (normalizarNome(nomeReserva) === normalizarNome(nome)) {
+      const dataValidade = new Date(validoAte);
+      if (dataValidade >= hoje) {
+        return { numero: Number(numero), validoAte: formatarData(dataValidade) };
+      }
+    }
+  }
+  return null;
+}
+
+function verificarNumeroDisponivel(numero, nomeSolicitante) {
+  const ocupados = buscarNumerosOcupados();
+  if (ocupados[numero] && normalizarNome(ocupados[numero]) !== normalizarNome(nomeSolicitante)) {
+    return { livre: false, motivo: "ocupado", nome: ocupados[numero] };
+  }
+
+  const reservas = buscarReservasValidas();
+  if (reservas[numero] && normalizarNome(reservas[numero].nome) !== normalizarNome(nomeSolicitante)) {
+    return {
+      livre: false,
+      motivo: "reservado",
+      nome: reservas[numero].nome,
+      validoAte: reservas[numero].validoAte,
+    };
+  }
+
+  return { livre: true };
+}
+
+function formatarData(data) {
+  return Utilities.formatDate(data, Session.getScriptTimeZone(), "dd/MM/yyyy");
 }
 
 /* ---------- helpers ---------- */

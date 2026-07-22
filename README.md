@@ -23,12 +23,26 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
    - **Restante**, com valor variável, cobrado depois quando a produção
      fechar o preço final — seção 03 do site, separada, pra pessoa acessar
      de novo quando vocês avisarem que já dá pra pagar.
-4. Ao enviar o pedido inicial, os dados vão pro Apps Script, que grava/atualiza
+4. Cada número de camisa só pode pertencer a uma pessoa por vez. O site
+   mostra uma grade com todos os números de 0 a 99, coloridos por status
+   (livre, reservado, ocupado), e a pessoa pode clicar num número livre
+   pra preencher o campo sozinho. Isso é validado no servidor também, não
+   só na tela — ninguém consegue roubar um número já ocupado mesmo
+   tentando pelo console do navegador.
+5. Existe uma aba `Reservas` na planilha, onde você (o admin) anota quem
+   tem prioridade em cada número — seja porque participa ativamente dos
+   babas, seja porque já usou aquele número na edição anterior. Enquanto a
+   reserva estiver dentro do prazo, só a pessoa reservada consegue pegar
+   aquele número livremente; qualquer outra pessoa precisa de uma segunda
+   senha (`SENHA_LIBERACAO_RESERVA`) que só você deve entregar se o dono
+   abrir mão do número. Depois do prazo, a reserva expira sozinha e o
+   número fica livre pra qualquer um.
+6. Ao enviar o pedido inicial, os dados vão pro Apps Script, que grava/atualiza
    uma linha na aba `Pedidos` da planilha e sobe o comprovante do Pix pro
    Google Drive, guardando o link na planilha.
-5. Se a pessoa já tinha enviado um pedido, ao digitar o nome de novo os
+7. Se a pessoa já tinha enviado um pedido, ao digitar o nome de novo os
    campos vêm preenchidos e o envio **atualiza** a linha em vez de duplicar.
-6. Quando o valor final sair, você preenche **uma célula só** na aba
+8. Quando o valor final sair, você preenche **uma célula só** na aba
    `Config` da planilha, e a seção 03 do site passa a aceitar o pagamento
    do restante pra todo mundo.
 
@@ -41,11 +55,18 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
 4. Na barra de funções do editor, selecione `configurarPlanilha` e clique em
    **Executar** (▶). Na primeira vez ele vai pedir autorização — autorize
    com sua própria conta Google. Isso cria a aba `Pedidos` (com o cabeçalho
-   certo) e a aba `Config` (onde depois você vai colocar o valor do restante).
+   certo), a aba `Config` (onde depois você vai colocar o valor do restante)
+   e a aba `Reservas` (com uma linha de exemplo).
 5. Ainda no `Code.gs`, troque o valor de `SENHA_GRUPO` (perto do topo do
    arquivo) por um código que só o grupo vai saber, tipo `"fulerao10"` ou
-   qualquer coisa fácil de repassar no WhatsApp. Salve o arquivo (💾 ou
+   qualquer coisa fácil de repassar no WhatsApp. Troque também
+   `SENHA_LIBERACAO_RESERVA` por outro código — esse **não é pra repassar
+   pro grupo todo**, é só pra você usar pontualmente quando alguém abrir
+   mão de um número reservado que era dele. Salve o arquivo (💾 ou
    `Ctrl+S`).
+6. Vá na aba `Reservas` da planilha e apague a linha de exemplo, colocando
+   no lugar quem tem prioridade em cada número (veja a seção "Reservas de
+   número" mais abaixo).
 
 > **Já tinha configurado a planilha antes desta atualização?** O
 > `configurarPlanilha` só cria abas que não existem, então ele não vai
@@ -54,9 +75,10 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
 > ComprovanteSinalLink, RestantePago, ComprovanteRestanteLink,
 > DataHoraPedido, ValorRestantePago, DataHoraRestante`. Se faltar alguma,
 > insira colunas manualmente (botão direito na letra da coluna → Inserir
-> coluna) até bater com essa ordem — a última coluna que a maioria de
-> vocês vai precisar adicionar é `ValorRestantePago` e `DataHoraRestante`
-> no final.
+> coluna) até bater com essa ordem. Se não tiver dados reais ainda, é mais
+> simples apagar a aba `Pedidos` inteira e rodar `configurarPlanilha` de
+> novo — ele recria do zero certinho. Rodar de novo também cria a aba
+> `Reservas`, que é nova nesta versão.
 
 ## Passo 2 — Publicar o Web App
 
@@ -146,21 +168,59 @@ nativas do Sheets (não precisa de código):
   abrem direto o print/foto que a pessoa enviou, salvos automaticamente
   numa pasta do seu Google Drive chamada "Fulerao FC - Comprovantes Pix".
 
+## Reservas de número
+
+A aba `Reservas` tem 3 colunas: `Numero | Nome | ValidoAte`. Você preenche
+manualmente, uma linha por número que tem prioridade definida — as duas
+regras do grupo (participação ativa nos babas da TCN, e preferência de
+quem já usou aquele número na edição anterior) são critérios seus, o
+sistema só aplica o resultado que você decidir.
+
+Exemplo de linha: `10 | Rapha | 2026-08-15` — o número 10 fica reservado
+pro Rapha até 15/08/2026. Formato de data: `AAAA-MM-DD` funciona bem no
+Sheets independente da configuração regional.
+
+**O que acontece com um número reservado:**
+
+- Se a própria pessoa reservada preencher o pedido com aquele número, ela
+  passa direto, sem precisar de senha extra — o site já reconhece que é a
+  reserva dela (mesmo nome, ignorando maiúscula/minúscula e espaço).
+- Se **outra pessoa** tentar pegar esse número enquanto a reserva estiver
+  dentro do prazo, o site pede a `SENHA_LIBERACAO_RESERVA` (a segunda
+  senha, diferente do código do grupo). Só entregue essa senha pra alguém
+  se o dono do número realmente abriu mão dele.
+- Depois da data em `ValidoAte`, a reserva expira sozinha — o número passa
+  a aparecer como livre pra qualquer um, sem precisar de senha nenhuma.
+- Um número não pode ficar reservado e ocupado ao mesmo tempo: assim que
+  alguém confirma um pedido com aquele número, ele passa a contar como
+  "ocupado" pra todo mundo, reserva ou não.
+
+A grade de números do site (seção 02) mostra em tempo quase real —
+atualiza ao carregar a página, depois de qualquer pedido confirmado, e com
+o botão "Atualizar" — quais números estão livres, reservados (com o nome
+de quem) ou ocupados. A pessoa pode clicar num número livre pra preencher
+o campo sozinho.
+
 ## Sobre o controle de acesso
 
-O acesso é controlado por um único código do grupo (`SENHA_GRUPO` no
+O acesso geral é controlado por um código do grupo (`SENHA_GRUPO` no
 `Code.gs`), validado no servidor — então ninguém de fora do grupo consegue
-enviar um pedido, mesmo tentando direto pelo console do navegador. Como o
-nome agora é texto livre, o único cuidado é: se alguém digitar o próprio
-nome de formas diferentes em pedidos separados (ex: "Rapha" numa vez e
-"Raphael" noutra), o sistema entende como duas pessoas diferentes — o
-casamento de nomes ignora maiúscula/minúscula e espaços nas pontas, mas não
-adivinha apelidos diferentes. Vale combinar com o grupo pra sempre usar o
-mesmo nome.
+enviar um pedido, mesmo tentando direto pelo console do navegador. Existe
+uma segunda senha, `SENHA_LIBERACAO_RESERVA`, só pra destravar um número
+reservado de outra pessoa — trate essa como uma senha de uso pontual, não
+como algo pra deixar fixado num grupo de WhatsApp.
 
-Se um dia quiser trocar o código do grupo (por exemplo, se vazar), é só
-editar `SENHA_GRUPO` no `Code.gs` e publicar uma nova versão do
-implantação (veja o Passo 2).
+Como o nome agora é texto livre, o único cuidado é: se alguém digitar o
+próprio nome de formas diferentes em pedidos separados (ex: "Rapha" numa
+vez e "Raphael" noutra), o sistema entende como duas pessoas diferentes —
+o casamento de nomes ignora maiúscula/minúscula e espaços nas pontas, mas
+não adivinha apelidos diferentes. Vale combinar com o grupo pra sempre
+usar o mesmo nome (isso também é importante pra reserva de número
+reconhecer a pessoa certa).
+
+Se um dia quiser trocar qualquer uma das senhas (por exemplo, se vazou), é
+só editar a constante correspondente no `Code.gs` e publicar uma nova
+versão da implantação (veja o Passo 2).
 
 ## Se algo der CORS/erro de conexão
 

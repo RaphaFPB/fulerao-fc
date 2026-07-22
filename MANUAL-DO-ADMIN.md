@@ -104,6 +104,50 @@ nas colunas `SinalPago`, `RestantePago`, `ValorRestantePago`,
 `DataHoraRestante` e nos links de comprovante, porque essas são
 preenchidas pelo sistema.
 
+## Números de camisa — só um por pessoa
+
+Cada número (0 a 99) só pode pertencer a uma pessoa por vez, o site cuida
+disso sozinho — ninguém consegue enviar um pedido com um número que já
+está ocupado.
+
+### A aba "Reservas"
+
+Existe uma aba separada, `Reservas`, com 3 colunas: `Numero | Nome |
+ValidoAte`. É ali que você define quem tem prioridade em qual número, com
+base nos dois critérios do grupo:
+
+1. A pessoa participa ativamente dos babas da TCN.
+2. A pessoa já usava aquele número na edição anterior da camisa.
+
+Isso é um julgamento seu, o site não decide sozinho quem "merece" — ele só
+aplica a regra depois que você preenche a linha. Exemplo:
+
+```
+Numero | Nome  | ValidoAte
+10     | Rapha | 2026-08-15
+```
+
+Isso reserva o número 10 pro Rapha até 15/08/2026. Depois dessa data, se
+ele não tiver feito o pedido, o número vira livre pra qualquer um.
+
+### O que a pessoa vê no site
+
+- Se a pessoa digitar o nome dela e tiver uma reserva vigente, aparece um
+  aviso na hora avisando qual número é dela.
+- Se ela escolher um número reservado de outra pessoa, aparece "Reservado
+  para Fulano até tal data" — e o site pede uma segunda senha, diferente
+  do código do grupo, pra liberar mesmo assim.
+
+### A segunda senha (liberação de reserva)
+
+Essa senha (`SENHA_LIBERACAO_RESERVA`, definida no `Code.gs`) só deve ser
+entregue **pontualmente**, pra uma pessoa específica, e só se o dono
+original do número reservado já concordou em abrir mão dele. Não é pra
+circular no grupo todo — é diferente do código de pedido normal.
+
+Se alguém pedir essa senha sem justificativa, vale confirmar antes com
+quem é o dono da reserva daquele número.
+
 ## Dúvidas técnicas
 
 Qualquer coisa que fuja disso aqui (o site não carrega, dá erro estranho,
