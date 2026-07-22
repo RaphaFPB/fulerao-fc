@@ -4,7 +4,7 @@
    const CONFIG = {
     // Cole aqui a URL do Web App depois de publicar o Google Apps Script
     // (Extensões > Apps Script > Implantar > Nova implantação > Web app)
-    APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzyFLK8BuaKgzKlM-vo-idZWctEdt7N-2yvqMbWYsML6BBefmOKrQqa51ahoKoTspUg/exec",
+    APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzAWhO2duPVnVJ2YYQQb9Qm25Opja-6q5vE7tODZbFG4ZqXO0Ls9TR-6rUX0o_v5qYn/exec",
   
     VALOR_SINAL: 20.0, // valor fixo cobrado na hora do pedido, em reais
     CHAVE_PIX: "778f0c26-9e28-4a5d-8ee4-f0ad8cde6c96",
