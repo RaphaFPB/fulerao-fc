@@ -7,8 +7,8 @@ const CONFIG = {
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzyFLK8BuaKgzKlM-vo-idZWctEdt7N-2yvqMbWYsML6BBefmOKrQqa51ahoKoTspUg/exec",
 
   VALOR_SINAL: 20.0, // valor fixo cobrado na hora do pedido, em reais
-  CHAVE_PIX: "seuemail@exemplo.com",
-  TIPO_CHAVE_PIX: "e-mail", // e-mail, celular, cpf, aleatória...
+  CHAVE_PIX: "778f0c26-9e28-4a5d-8ee4-f0ad8cde6c96",
+  TIPO_CHAVE_PIX: "aleatória", // e-mail, celular, cpf, aleatória...
 };
 
 /* ====================================================== */
