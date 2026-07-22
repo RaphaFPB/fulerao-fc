@@ -33,10 +33,11 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
    tem prioridade em cada número — seja porque participa ativamente dos
    babas, seja porque já usou aquele número na edição anterior. Enquanto a
    reserva estiver dentro do prazo, só a pessoa reservada consegue pegar
-   aquele número livremente; qualquer outra pessoa precisa de uma segunda
-   senha (`SENHA_LIBERACAO_RESERVA`) que só você deve entregar se o dono
-   abrir mão do número. Depois do prazo, a reserva expira sozinha e o
-   número fica livre pra qualquer um.
+   aquele número livremente; qualquer outra pessoa precisa de uma **senha
+   específica daquele número** (cada linha da aba `Reservas` tem a sua
+   própria) que só você deve entregar se o dono abrir mão do número.
+   Depois do prazo, a reserva expira sozinha e o número fica livre pra
+   qualquer um, sem senha nenhuma.
 6. Ao enviar o pedido inicial, os dados vão pro Apps Script, que grava/atualiza
    uma linha na aba `Pedidos` da planilha e sobe o comprovante do Pix pro
    Google Drive, guardando o link na planilha.
@@ -59,14 +60,12 @@ semana é uma fração mínima da cota diária gratuita do Apps Script).
    e a aba `Reservas` (com uma linha de exemplo).
 5. Ainda no `Code.gs`, troque o valor de `SENHA_GRUPO` (perto do topo do
    arquivo) por um código que só o grupo vai saber, tipo `"fulerao10"` ou
-   qualquer coisa fácil de repassar no WhatsApp. Troque também
-   `SENHA_LIBERACAO_RESERVA` por outro código — esse **não é pra repassar
-   pro grupo todo**, é só pra você usar pontualmente quando alguém abrir
-   mão de um número reservado que era dele. Salve o arquivo (💾 ou
+   qualquer coisa fácil de repassar no WhatsApp. Salve o arquivo (💾 ou
    `Ctrl+S`).
 6. Vá na aba `Reservas` da planilha e apague a linha de exemplo, colocando
    no lugar quem tem prioridade em cada número (veja a seção "Reservas de
-   número" mais abaixo).
+   número" mais abaixo) — inclusive a senha de liberação de cada reserva,
+   que fica direto na planilha, não no código.
 
 > **Já tinha configurado a planilha antes desta atualização?** O
 > `configurarPlanilha` só cria abas que não existem, então ele não vai
@@ -170,25 +169,33 @@ nativas do Sheets (não precisa de código):
 
 ## Reservas de número
 
-A aba `Reservas` tem 3 colunas: `Numero | Nome | ValidoAte`. Você preenche
-manualmente, uma linha por número que tem prioridade definida — as duas
-regras do grupo (participação ativa nos babas da TCN, e preferência de
-quem já usou aquele número na edição anterior) são critérios seus, o
-sistema só aplica o resultado que você decidir.
+A aba `Reservas` tem 4 colunas: `Numero | Nome | ValidoAte |
+SenhaLiberacao`. Você preenche manualmente, uma linha por número que tem
+prioridade definida — as duas regras do grupo (participação ativa nos
+babas da TCN, e preferência de quem já usou aquele número na edição
+anterior) são critérios seus, o sistema só aplica o resultado que você
+decidir.
 
-Exemplo de linha: `10 | Rapha | 2026-08-15` — o número 10 fica reservado
-pro Rapha até 15/08/2026. Formato de data: `AAAA-MM-DD` funciona bem no
-Sheets independente da configuração regional.
+Exemplo de linha: `10 | Rapha | 2026-08-15 | libera10-2026` — o número 10
+fica reservado pro Rapha até 15/08/2026, e `libera10-2026` é a senha que
+só serve pra liberar **esse número especificamente** pra outra pessoa.
+Formato de data: `AAAA-MM-DD` funciona bem no Sheets independente da
+configuração regional.
+
+Cada linha tem sua própria senha — não existe mais uma senha única pra
+todas as reservas. Isso é mais seguro: mesmo que a senha de um número
+vaze ou seja repassada por engano, ela não abre as reservas dos outros.
 
 **O que acontece com um número reservado:**
 
 - Se a própria pessoa reservada preencher o pedido com aquele número, ela
-  passa direto, sem precisar de senha extra — o site já reconhece que é a
-  reserva dela (mesmo nome, ignorando maiúscula/minúscula e espaço).
+  passa direto, sem precisar de senha nenhuma — o site já reconhece que é
+  a reserva dela (mesmo nome, ignorando maiúscula/minúscula e espaço).
 - Se **outra pessoa** tentar pegar esse número enquanto a reserva estiver
-  dentro do prazo, o site pede a `SENHA_LIBERACAO_RESERVA` (a segunda
-  senha, diferente do código do grupo). Só entregue essa senha pra alguém
-  se o dono do número realmente abriu mão dele.
+  dentro do prazo, o site pede a senha daquela linha específica da aba
+  `Reservas`. Se a coluna `SenhaLiberacao` estiver vazia, ninguém além do
+  próprio dono consegue pegar o número antes do prazo — nem com senha
+  nenhuma, já que não existe senha cadastrada pra comparar.
 - Depois da data em `ValidoAte`, a reserva expira sozinha — o número passa
   a aparecer como livre pra qualquer um, sem precisar de senha nenhuma.
 - Um número não pode ficar reservado e ocupado ao mesmo tempo: assim que
@@ -205,10 +212,10 @@ o campo sozinho.
 
 O acesso geral é controlado por um código do grupo (`SENHA_GRUPO` no
 `Code.gs`), validado no servidor — então ninguém de fora do grupo consegue
-enviar um pedido, mesmo tentando direto pelo console do navegador. Existe
-uma segunda senha, `SENHA_LIBERACAO_RESERVA`, só pra destravar um número
-reservado de outra pessoa — trate essa como uma senha de uso pontual, não
-como algo pra deixar fixado num grupo de WhatsApp.
+enviar um pedido, mesmo tentando direto pelo console do navegador. Cada
+número reservado tem sua própria senha de liberação, guardada na aba
+`Reservas` (coluna `SenhaLiberacao`) — trate cada uma como uso pontual,
+não como algo pra deixar fixado num grupo de WhatsApp.
 
 Como o nome agora é texto livre, o único cuidado é: se alguém digitar o
 próprio nome de formas diferentes em pedidos separados (ex: "Rapha" numa
@@ -218,9 +225,11 @@ não adivinha apelidos diferentes. Vale combinar com o grupo pra sempre
 usar o mesmo nome (isso também é importante pra reserva de número
 reconhecer a pessoa certa).
 
-Se um dia quiser trocar qualquer uma das senhas (por exemplo, se vazou), é
-só editar a constante correspondente no `Code.gs` e publicar uma nova
-versão da implantação (veja o Passo 2).
+Se um dia quiser trocar o código do grupo (por exemplo, se vazou), é só
+editar `SENHA_GRUPO` no `Code.gs` e publicar uma nova versão da
+implantação (veja o Passo 2). Já as senhas de liberação de reserva se
+trocam direto na planilha, sem precisar mexer no código nem redeployar
+nada.
 
 ## Se algo der CORS/erro de conexão
 

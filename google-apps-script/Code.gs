@@ -11,11 +11,6 @@ const NOME_PASTA_COMPROVANTES = "Fulerao FC - Comprovantes Pix";
 // Código pra qualquer pedido. Combine com o grupo inteiro.
 const SENHA_GRUPO = "fulerao2026";
 
-// Segunda senha, só pra liberar um número que está reservado pra outra
-// pessoa. Não repasse pro grupo todo — só entregue pontualmente quando o
-// dono da reserva abrir mão do número dele.
-const SENHA_LIBERACAO_RESERVA = "libera-numero-2026";
-
 const TIPOS_CAMISA_VALIDOS = ["Linha", "Goleiro"];
 const TAMANHOS_VALIDOS = ["P", "M", "G", "GG", "XG"];
 
@@ -34,7 +29,7 @@ const CABECALHO_PEDIDOS = [
   "DataHoraRestante",
 ];
 
-const CABECALHO_RESERVAS = ["Numero", "Nome", "ValidoAte"];
+const CABECALHO_RESERVAS = ["Numero", "Nome", "ValidoAte", "SenhaLiberacao"];
 
 /* ---------- ponto de entrada: configura as abas na primeira vez ---------- */
 
@@ -61,14 +56,14 @@ function configurarPlanilha() {
     abaReservas = planilha.insertSheet(ABA_RESERVAS);
     abaReservas.getRange(1, 1, 1, CABECALHO_RESERVAS.length).setValues([CABECALHO_RESERVAS]);
     abaReservas.setFrozenRows(1);
-    abaReservas.getRange(2, 1, 1, 3).setValues([[10, "Exemplo Jogador", "2026-08-15"]]);
+    abaReservas.getRange(2, 1, 1, 4).setValues([[10, "Exemplo Jogador", "2026-08-15", "libera10-2026"]]);
   }
 
   Logger.log(
-    "Planilha configurada. Defina SENHA_GRUPO e SENHA_LIBERACAO_RESERVA no " +
-    "Code.gs, preencha a aba 'Reservas' com quem tem prioridade em cada " +
-    "número, e quando souber o valor final da camisa, preencha a célula " +
-    "B1 da aba 'Config'."
+    "Planilha configurada. Defina SENHA_GRUPO no Code.gs, preencha a aba " +
+    "'Reservas' com quem tem prioridade em cada número (e a senha de " +
+    "liberação de cada um), e quando souber o valor final da camisa, " +
+    "preencha a célula B1 da aba 'Config'."
   );
 }
 
@@ -161,13 +156,17 @@ function processarPedidoInicial(corpo) {
       });
     }
     if (statusNumero.motivo === "reservado") {
-      if (corpo.senhaLiberacao !== SENHA_LIBERACAO_RESERVA) {
+      const senhaEsperada = statusNumero.senhaLiberacao;
+      const senhaCorreta = senhaEsperada && corpo.senhaLiberacao === senhaEsperada;
+
+      if (!senhaCorreta) {
         return responderJson({
           success: false,
           message:
             `O número ${numero} está reservado para ${statusNumero.nome} até ` +
             `${statusNumero.validoAte}. Pra pegar mesmo assim, informe a senha de ` +
-            `liberação (peça pro admin, só se essa pessoa abriu mão do número).`,
+            `liberação desse número específico (peça pro admin, só se essa pessoa ` +
+            `abriu mão dele).`,
         });
       }
     }
@@ -332,11 +331,16 @@ function buscarReservasValidas() {
     const numero = dados[i][0];
     const nome = dados[i][1];
     const validoAte = dados[i][2];
+    const senhaLiberacao = dados[i][3];
     if (numero === "" || numero === null || !nome || !validoAte) continue;
 
     const dataValidade = new Date(validoAte);
     if (dataValidade >= hoje) {
-      reservas[Number(numero)] = { nome: nome, validoAte: formatarData(dataValidade) };
+      reservas[Number(numero)] = {
+        nome: nome,
+        validoAte: formatarData(dataValidade),
+        senhaLiberacao: String(senhaLiberacao || "").trim(),
+      };
     }
   }
   return reservas;
@@ -378,6 +382,7 @@ function verificarNumeroDisponivel(numero, nomeSolicitante) {
       motivo: "reservado",
       nome: reservas[numero].nome,
       validoAte: reservas[numero].validoAte,
+      senhaLiberacao: reservas[numero].senhaLiberacao,
     };
   }
 

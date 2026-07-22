@@ -112,9 +112,9 @@ está ocupado.
 
 ### A aba "Reservas"
 
-Existe uma aba separada, `Reservas`, com 3 colunas: `Numero | Nome |
-ValidoAte`. É ali que você define quem tem prioridade em qual número, com
-base nos dois critérios do grupo:
+Existe uma aba separada, `Reservas`, com 4 colunas: `Numero | Nome |
+ValidoAte | SenhaLiberacao`. É ali que você define quem tem prioridade em
+qual número, com base nos dois critérios do grupo:
 
 1. A pessoa participa ativamente dos babas da TCN.
 2. A pessoa já usava aquele número na edição anterior da camisa.
@@ -123,30 +123,40 @@ Isso é um julgamento seu, o site não decide sozinho quem "merece" — ele só
 aplica a regra depois que você preenche a linha. Exemplo:
 
 ```
-Numero | Nome  | ValidoAte
-10     | Rapha | 2026-08-15
+Numero | Nome  | ValidoAte  | SenhaLiberacao
+10     | Rapha | 2026-08-15 | libera10-2026
 ```
 
-Isso reserva o número 10 pro Rapha até 15/08/2026. Depois dessa data, se
-ele não tiver feito o pedido, o número vira livre pra qualquer um.
+Isso reserva o número 10 pro Rapha até 15/08/2026, com uma senha própria
+(`libera10-2026`) que só serve pra esse número. Depois dessa data, se ele
+não tiver feito o pedido, o número vira livre pra qualquer um, sem
+precisar de senha nenhuma.
+
+**Cada linha tem a sua própria senha** — não existe mais uma senha única
+que libera todas as reservas. Isso significa que você pode (e deve) usar
+uma senha diferente pra cada reserva, e trocar direto na planilha quando
+quiser, sem precisar mexer em código nem pedir pra ninguém redeployar
+nada.
+
+Se deixar a coluna `SenhaLiberacao` vazia numa linha, ninguém além do
+próprio dono consegue pegar aquele número antes do prazo — nem com senha,
+já que não existe nenhuma cadastrada pra comparar.
 
 ### O que a pessoa vê no site
 
 - Se a pessoa digitar o nome dela e tiver uma reserva vigente, aparece um
   aviso na hora avisando qual número é dela.
 - Se ela escolher um número reservado de outra pessoa, aparece "Reservado
-  para Fulano até tal data" — e o site pede uma segunda senha, diferente
-  do código do grupo, pra liberar mesmo assim.
+  para Fulano até tal data" — e o site pede a senha de liberação daquele
+  número específico pra liberar mesmo assim.
 
-### A segunda senha (liberação de reserva)
+### Quando entregar a senha de liberação
 
-Essa senha (`SENHA_LIBERACAO_RESERVA`, definida no `Code.gs`) só deve ser
-entregue **pontualmente**, pra uma pessoa específica, e só se o dono
-original do número reservado já concordou em abrir mão dele. Não é pra
-circular no grupo todo — é diferente do código de pedido normal.
-
-Se alguém pedir essa senha sem justificativa, vale confirmar antes com
-quem é o dono da reserva daquele número.
+Só entregue a senha de um número pra alguém se o dono original daquele
+número já concordou em abrir mão dele. Se alguém pedir sem justificativa,
+vale confirmar antes com quem é o dono da reserva. Como cada número tem
+senha própria, vazar ou repassar uma delas por engano não compromete as
+reservas dos outros.
 
 ## Dúvidas técnicas
 
