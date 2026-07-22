@@ -227,7 +227,7 @@
   
   btnAtualizarNumeros.addEventListener("click", carregarGradeNumeros);
   
-  /* consulta o status do número e só exige senha se o Nome da Camisa não bater com a reserva */
+  /* consulta o status do número e só exibe a senha se houver um nome digitado que discorde da reserva */
   
   async function consultarStatusNumero(numero) {
     if (numero === "" || numero === null || isNaN(Number(numero))) {
@@ -247,7 +247,10 @@
   
       const nomeCamisaDigitado = normalizarNomeCliente(inputNomeCamisa.value);
       const nomeReserva = normalizarNomeCliente(dados.nome);
-      const souEuQueTenhoReserva = dados.status === "reservado" && nomeCamisaDigitado && nomeCamisaDigitado === nomeReserva;
+      
+      // Verifica se a pessoa preencheu o nome na camisa e se bate com a reserva
+      const temNomeDigitado = nomeCamisaDigitado.length > 0;
+      const souEuQueTenhoReserva = dados.status === "reservado" && temNomeDigitado && nomeCamisaDigitado === nomeReserva;
   
       if (dados.status === "ocupado") {
         statusNumeroInfo.textContent = `Ocupado por ${dados.nome}. Escolha outro número.`;
@@ -261,8 +264,9 @@
         statusNumeroInfo.textContent = `Reservado para ${dados.nome} até ${dados.validoAte}.`;
         statusNumeroInfo.className = "status-numero-info status-reservado";
         
-        // SÓ MOSTRA O CAMPO DE SENHA SE O NOME DIGITADO NA CAMISA NÃO COINCIDIR
-        if (!nomeCamisaDigitado || nomeCamisaDigitado !== nomeReserva) {
+        // REGRA AJUSTADA: Só exibe o campo de senha se o usuário já tiver digitado um nome na camisa
+        // E esse nome for DIFERENTE do dono da reserva.
+        if (temNomeDigitado && nomeCamisaDigitado !== nomeReserva) {
           blocoSenhaLiberacao.classList.remove("oculto");
         } else {
           blocoSenhaLiberacao.classList.add("oculto");
@@ -280,7 +284,7 @@
   
   inputNumero.addEventListener("blur", () => consultarStatusNumero(inputNumero.value));
   
-  // Atualiza a validação assim que a pessoa digita/muda o Nome na Camisa
+  // Sempre que o usuário alterar o Nome da Camisa, reavalia a necessidade da senha de liberação
   inputNomeCamisa.addEventListener("input", () => {
     if (inputNumero.value) consultarStatusNumero(inputNumero.value);
   });
