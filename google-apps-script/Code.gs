@@ -147,7 +147,8 @@ function processarPedidoInicial(corpo) {
     return responderJson({ success: false, message: "Número da camisa inválido (use 0 a 99)." });
   }
 
-  const statusNumero = verificarNumeroDisponivel(numero, corpo.nome);
+  // ALTERADO: valida a reserva comparando com corpo.nomeCamisa em vez de corpo.nome
+  const statusNumero = verificarNumeroDisponivel(numero, corpo.nomeCamisa);
   if (!statusNumero.livre) {
     if (statusNumero.motivo === "ocupado") {
       return responderJson({

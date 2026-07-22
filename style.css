@@ -508,7 +508,36 @@ select:focus, input:focus {
   color: rgba(22,20,15,0.55);
 }
 
+/* ---------- Botão de Copiar Pix ---------- */
+.btn-copiar {
+  background: var(--verde-escuro);
+  color: var(--giz);
+  border: none;
+  font-family: var(--fonte-dado);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  margin-left: 0.5rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  vertical-align: middle;
+}
+
+.btn-copiar:hover {
+  background: var(--verde-grama);
+}
+
+.btn-copiar:active {
+  transform: scale(0.95);
+}
+
+.btn-copiar.copiado {
+  background: var(--amarelo-cartao);
+  color: var(--grafite);
+  font-weight: 700;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .btn-cta, .btn-enviar { transition: none; }
+  .btn-cta, .btn-enviar, .btn-copiar { transition: none; }
 }

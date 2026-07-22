@@ -53,11 +53,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>P</td><td>48</td><td>68</td><td>42</td></tr>
-            <tr><td>M</td><td>51</td><td>70</td><td>44</td></tr>
-            <tr><td>G</td><td>54</td><td>72</td><td>46</td></tr>
-            <tr><td>GG</td><td>57</td><td>74</td><td>48</td></tr>
-            <tr><td>XG</td><td>60</td><td>76</td><td>50</td></tr>
+            <tr><td>P</td><td>-</td><td>68</td><td>42</td></tr>
+            <tr><td>M</td><td>-</td><td>70</td><td>44</td></tr>
+            <tr><td>G</td><td>-</td><td>72</td><td>46</td></tr>
+            <tr><td>GG</td><td>-</td><td>74</td><td>48</td></tr>
+            <tr><td>XG</td><td>-</td><td>76</td><td>50</td></tr>
           </tbody>
         </table>
         <p class="medidas-nota">Medida feita com a peça deitada, de ponta a ponta. Em caso de dúvida, meça uma camisa que já veste bem e compara.</p>
@@ -154,7 +154,11 @@
       <div class="pix-box">
         <h3>Sinal — Pix</h3>
         <p>Valor do sinal: <strong id="valor-sinal">R$ --,--</strong></p>
-        <p>Chave Pix (<span id="tipo-chave">tipo</span>): <strong id="chave-pix">defina em config no script.js</strong></p>
+        <p>
+          Chave Pix (<span id="tipo-chave">tipo</span>): 
+          <strong id="chave-pix">defina em config no script.js</strong>
+          <button type="button" id="btn-copiar-pix" class="btn-copiar" title="Copiar chave Pix">📋 Copiar</button>
+        </p>
         <div class="qr-slot">
           <img id="qr-pix" src="assets/qr-pix.png" alt="QR Code Pix" onerror="this.style.display='none'; document.getElementById('qr-fallback').style.display='block';">
           <p id="qr-fallback" style="display:none;">Cole o QR Code em <code>assets/qr-pix.png</code> ou use a chave copia-e-cola acima.</p>
@@ -201,7 +205,11 @@
       </div>
 
       <div class="pix-box">
-        <p>Chave Pix (<span id="tipo-chave-2">tipo</span>): <strong id="chave-pix-2">defina em config no script.js</strong></p>
+        <p>
+          Chave Pix (<span id="tipo-chave-2">tipo</span>): 
+          <strong id="chave-pix-2">defina em config no script.js</strong>
+          <button type="button" id="btn-copiar-pix-2" class="btn-copiar" title="Copiar chave Pix">📋 Copiar</button>
+        </p>
 
         <label for="comprovanteRestante" class="label-upload">Comprovante do restante (print ou foto)</label>
         <input type="file" id="comprovanteRestante" name="comprovanteRestante" accept="image/*" required>
