@@ -314,6 +314,7 @@ select:focus, input:focus {
 
 .grade-legenda {
   display: flex;
+  flex-wrap: wrap;
   gap: 1.2rem;
   font-family: var(--fonte-dado);
   font-size: 0.75rem;
@@ -321,6 +322,7 @@ select:focus, input:focus {
 }
 
 .grade-legenda span { display: flex; align-items: center; gap: 0.35rem; }
+.grade-legenda strong { font-weight: 700; color: var(--verde-escuro); }
 
 .ponto {
   display: inline-block;

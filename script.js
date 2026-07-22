@@ -3,7 +3,6 @@
    ====================================================== */
    const CONFIG = {
     // Cole aqui a URL do Web App depois de publicar o Google Apps Script
-    // (Extensões > Apps Script > Implantar > Nova implantação > Web app)
     APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzAWhO2duPVnVJ2YYQQb9Qm25Opja-6q5vE7tODZbFG4ZqXO0Ls9TR-6rUX0o_v5qYn/exec",
   
     VALOR_SINAL: 20.0, // valor fixo cobrado na hora do pedido, em reais
@@ -80,7 +79,6 @@
   async function enviarParaBackend(payload) {
     let resposta;
     try {
-      // Content-Type text/plain evita o preflight CORS que o Apps Script não trata bem
       resposta = await fetch(CONFIG.APPS_SCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -144,26 +142,47 @@
   document.getElementById("chave-pix").textContent = CONFIG.CHAVE_PIX;
   document.getElementById("tipo-chave").textContent = CONFIG.TIPO_CHAVE_PIX;
   
-  /* limpa o erro de um campo assim que a pessoa mexe nele de novo */
   CAMPOS_PEDIDO.forEach(([idInput, idErro]) => {
     const el = document.getElementById(idInput);
     const evento = el.type === "checkbox" || el.tagName === "SELECT" ? "change" : "input";
     el.addEventListener(evento, () => limparErroCampo(idInput, idErro));
   });
   
-  /* ---------- grade de números: carrega, desenha e reage a clique ---------- */
+  /* ---------- grade de números: carrega, desenha e contabiliza ---------- */
   
-  let estadoNumeroAtual = null; // último status consultado do número escolhido
+  let estadoNumeroAtual = null;
   
   async function carregarGradeNumeros() {
     try {
       const resp = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=numeros`);
       const dados = await resp.json();
-      desenharGradeNumeros(dados.numeros || []);
+      const numeros = dados.numeros || [];
+      desenharGradeNumeros(numeros);
+      atualizarContadoresLegenda(numeros);
     } catch (erro) {
       gradeNumeros.innerHTML = `<p class="grade-carregando">Não consegui carregar os números agora. Clica em "Atualizar".</p>`;
       console.error("Falha ao buscar grade de números:", erro);
     }
+  }
+  
+  function atualizarContadoresLegenda(numeros) {
+    let livres = 0;
+    let reservados = 0;
+    let ocupados = 0;
+  
+    numeros.forEach((item) => {
+      if (item.status === "ocupado") ocupados++;
+      else if (item.status === "reservado") reservados++;
+      else livres++;
+    });
+  
+    const elLivre = document.getElementById("qtd-livres");
+    const elReservado = document.getElementById("qtd-reservados");
+    const elOcupado = document.getElementById("qtd-ocupados");
+  
+    if (elLivre) elLivre.textContent = `(${livres})`;
+    if (elReservado) elReservado.textContent = `(${reservados})`;
+    if (elOcupado) elOcupado.textContent = `(${ocupados})`;
   }
   
   function desenharGradeNumeros(numeros) {
@@ -208,7 +227,7 @@
   
   btnAtualizarNumeros.addEventListener("click", carregarGradeNumeros);
   
-  /* consulta o status de um número específico e decide se mostra a senha de liberação */
+  /* consulta o status do número e só exige senha se o Nome da Camisa não bater com a reserva */
   
   async function consultarStatusNumero(numero) {
     if (numero === "" || numero === null || isNaN(Number(numero))) {
@@ -226,22 +245,28 @@
       const dados = await resp.json();
       estadoNumeroAtual = dados;
   
-      // ALTERADO: compara a reserva com o NOME NA CAMISA em vez do seu nome
-      const souEuQueTenhoReserva =
-        dados.status === "reservado" && normalizarNomeCliente(dados.nome) === normalizarNomeCliente(inputNomeCamisa.value);
+      const nomeCamisaDigitado = normalizarNomeCliente(inputNomeCamisa.value);
+      const nomeReserva = normalizarNomeCliente(dados.nome);
+      const souEuQueTenhoReserva = dados.status === "reservado" && nomeCamisaDigitado && nomeCamisaDigitado === nomeReserva;
   
       if (dados.status === "ocupado") {
         statusNumeroInfo.textContent = `Ocupado por ${dados.nome}. Escolha outro número.`;
         statusNumeroInfo.className = "status-numero-info status-ocupado";
         blocoSenhaLiberacao.classList.add("oculto");
       } else if (dados.status === "reservado" && souEuQueTenhoReserva) {
-        statusNumeroInfo.textContent = `Esse número está reservado pra você até ${dados.validoAte}. Pode seguir!`;
+        statusNumeroInfo.textContent = `Esse número está reservado pra você (${dados.nome}) até ${dados.validoAte}. Pode seguir!`;
         statusNumeroInfo.className = "status-numero-info status-livre";
         blocoSenhaLiberacao.classList.add("oculto");
       } else if (dados.status === "reservado") {
         statusNumeroInfo.textContent = `Reservado para ${dados.nome} até ${dados.validoAte}.`;
         statusNumeroInfo.className = "status-numero-info status-reservado";
-        blocoSenhaLiberacao.classList.remove("oculto");
+        
+        // SÓ MOSTRA O CAMPO DE SENHA SE O NOME DIGITADO NA CAMISA NÃO COINCIDIR
+        if (!nomeCamisaDigitado || nomeCamisaDigitado !== nomeReserva) {
+          blocoSenhaLiberacao.classList.remove("oculto");
+        } else {
+          blocoSenhaLiberacao.classList.add("oculto");
+        }
       } else {
         statusNumeroInfo.textContent = "Número livre.";
         statusNumeroInfo.className = "status-numero-info status-livre";
@@ -254,11 +279,11 @@
   }
   
   inputNumero.addEventListener("blur", () => consultarStatusNumero(inputNumero.value));
-  inputNomeCamisa.addEventListener("blur", () => {
+  
+  // Atualiza a validação assim que a pessoa digita/muda o Nome na Camisa
+  inputNomeCamisa.addEventListener("input", () => {
     if (inputNumero.value) consultarStatusNumero(inputNumero.value);
   });
-  
-  /* se o nome digitado bate com o de uma reserva vigente, mostra o aviso */
   
   function mostrarAvisoReserva(reserva) {
     if (reserva) {
@@ -297,7 +322,6 @@
       mostrarErroCampo("numero", "erro-numero", "Informe um número entre 0 e 99.");
       valido = false;
     } else if (estadoNumeroAtual && estadoNumeroAtual.numero === numero) {
-      // ALTERADO: compara com o NOME NA CAMISA
       const souEuQueTenhoReserva =
         estadoNumeroAtual.status === "reservado" &&
         normalizarNomeCliente(estadoNumeroAtual.nome) === normalizarNomeCliente(inputNomeCamisa.value);
@@ -331,8 +355,6 @@
     return valido;
   }
   
-  /* se a pessoa já tem pedido salvo, preenche pra edição */
-  
   async function carregarPedidoExistente(nome) {
     try {
       const resp = await fetch(
@@ -363,8 +385,6 @@
     if (inputNome.value.trim()) carregarPedidoExistente(inputNome.value.trim());
   });
   
-  /* crachá / preview ao vivo */
-  
   function atualizarPreview() {
     previewNumero.textContent = inputNumero.value
       ? String(inputNumero.value).padStart(2, "0")
@@ -376,8 +396,6 @@
   inputNumero.addEventListener("input", atualizarPreview);
   inputNomeCamisa.addEventListener("input", atualizarPreview);
   inputTipoCamisa.addEventListener("change", atualizarPreview);
-  
-  /* envio do pedido inicial */
   
   form.addEventListener("submit", async (evento) => {
     evento.preventDefault();
@@ -579,8 +597,6 @@
   
     navigator.clipboard.writeText(chave).then(() => {
       const textoOriginal = btnElemento.textContent;
-      
-      // Feedback visual para o usuário
       btnElemento.textContent = "✓ Copiado!";
       btnElemento.classList.add("copiado");
   
@@ -594,7 +610,6 @@
     });
   }
   
-  // Vincula o evento de clique aos botões de copiar
   document.getElementById("btn-copiar-pix")?.addEventListener("click", function () {
     copiarChavePix(this);
   });
